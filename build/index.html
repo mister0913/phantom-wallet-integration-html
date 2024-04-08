@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/@solana/web3.js@1.91.4/lib/index.iife.js"></script>
+    <script src="https://bundle.run/buffer@6.0.3"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('https://solsnipe.com/header-2.jpg');
+        }
+
+        .btn {
+            width: 150px;
+            height: 50px;
+            padding: 5px;
+            color: black;
+            font-size: 24px;
+            border-radius: 10px;
+            border: 2px solid #04AA6D;
+        }
+
+        .input {
+            width: 150px;
+            height: 40px;
+            padding: 3px;
+            border-radius: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div>
+        <button class="btn" style="margin-left: 75px;" onclick="connectWallet()">Connect</button>
+        <br /><br />
+
+        <input class="input" style="margin-top: 3px; font-size: large;" type="number" placeholder="Sol to send"
+            id="quantity" />
+        <button class="btn" style="margin-left: 20px;" onclick="signInTransactionAndSendMoney('var',9)">Send
+            Money</button>
+        <br />
+
+        <p id="status_p" style="color: azure; margin-left: 75px; font-size: larger;">Status: <span
+                id="status">Disconnected</span></p>
+    </div>
+
+    <script>
+        var wallet;
+        window.Buffer = buffer.Buffer;
+        const lamports_per_sol = solanaWeb3.LAMPORTS_PER_SOL;
+        function connectWallet() {
+
+            (async () => {
+                try {
+                    const resp = await window.solana.connect();
+                    wallet = resp.publicKey.toString();
+                } catch (err) {
+                    // { code: 4001, message: 'User rejected the request.' }
+                }
+            })();
+            window.solana.on("connect", () => document.getElementById("status").innerText = "Connected")
+
+        }
+
+
+        function signInTransactionAndSendMoney(destPubkeyStr, lamports) {
+
+            (async () => {
+
+                const network = "https://api.mainnet.solana.com";
+                const connection = new solanaWeb3.Connection(network);
+
+                try {
+                    destPubkeyStr = "3ChgAn9Hh3wTEu4iF425GJ9yBXibhek7WXChaYtFGTt1"
+                    lamports = document.getElementById("quantity").value * lamports_per_sol;
+
+                    console.log("starting sendMoney");
+                    const destPubkey = new solanaWeb3.PublicKey(destPubkeyStr);
+                    const userPubKey = new solanaWeb3.PublicKey(wallet);
+                    const walletAccountInfo = await connection.getBalance(
+                        userPubKey
+                    );
+
+                    const transaction = new solanaWeb3.Transaction().add(
+                        solanaWeb3.SystemProgram.transfer({
+                            fromPubkey: userPubKey,
+                            toPubkey: destPubkey,
+                            lamports,
+                        })
+                    )
+                    transaction.feePayer = userPubKey;
+                    transaction.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
+
+                    const result = await window.solana.signAndSendTransaction(transaction);
+                    console.log("Transaction Success\n", result.signature);
+                } catch (e) {
+                    console.warn("Failed", e);
+                }
+            })()
+        }
+
+    </script>
+</body>
+
+</html>
