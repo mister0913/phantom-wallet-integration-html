@@ -4,7 +4,7 @@
 <head>
     <!-- Development (un-minified) -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
-    <script src="https://bundle.run/buffer@6.0.3"></script>
+    <script src="https://unpkg.com/browse/buffer@6.0.3/index.js"></script>
 
 
 </head>
@@ -19,7 +19,7 @@
 
     <script>
         var wallet;
-        window.Buffer = buffer;
+        window.Buffer = window.buffer;
         const lamports_per_sol = solanaWeb3.LAMPORTS_PER_SOL;
         function connectWallet() {
 
